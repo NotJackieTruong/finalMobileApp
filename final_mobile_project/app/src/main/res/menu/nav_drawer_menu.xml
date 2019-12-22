@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_inbox"
+            android:icon="@drawable/ic_inbox"
+            android:title="Inbox" />
+        <item
+            android:id="@+id/nav_sent"
+            android:icon="@drawable/ic_send"
+            android:title="Sent" />
+        <item
+            android:id="@+id/nav_drafts"
+            android:icon="@drawable/ic_drafts"
+            android:title="Drafts" />
+
+
+    </group>
+    <item android:title="Account">
+        <menu>
+            <item
+                android:id="@+id/log_in"
+                android:icon="@drawable/ic_log_in"
+                android:title="Log in" />
+        </menu>
+    </item>
+</menu>
