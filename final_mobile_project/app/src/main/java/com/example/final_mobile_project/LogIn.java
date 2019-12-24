@@ -26,13 +26,18 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.SignInButton;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.util.ExponentialBackOff;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.zip.Inflater;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
+
+import static com.example.final_mobile_project.SplashActivity.PREF_ACCOUNT_NAME;
 
 
 public class LogIn extends AppCompatActivity implements View.OnClickListener {
@@ -71,6 +76,7 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
     }
 
     public void changeAccount(){
+
         SplashActivity.mCredential.setSelectedAccountName(" ");
         startActivityForResult(
                 SplashActivity.mCredential.newChooseAccountIntent(),
@@ -91,16 +97,16 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                         SharedPreferences settings =
                                 getPreferences(Context.MODE_PRIVATE);
                         SharedPreferences.Editor editor = settings.edit();
-                        editor.putString(SplashActivity.PREF_ACCOUNT_NAME, accountName);
+                        editor.putString(PREF_ACCOUNT_NAME, accountName);
                         editor.apply();
                         SplashActivity.mCredential.setSelectedAccountName(accountName);
                         Toast.makeText(getApplicationContext(), "Changed account successfully!", Toast.LENGTH_SHORT).show();
                         String userSelectedName = splashActivity.getUserEmail(SplashActivity.mCredential.getSelectedAccountName());
                         tvEmail.setText(userSelectedName);
-                        Intent intent = new Intent(LogIn.this, MainActivity.class);
-                        intent.putExtra("Start", "Start reloading");
-                        startActivity(intent);
-                        finish();
+//                        Intent intent = new Intent(LogIn.this, MainActivity.class);
+//                        intent.putExtra("Start", "Start reloading");
+//                        startActivity(intent);
+//                        finish();
                     }
                 }
                 break;

@@ -141,11 +141,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Bundle bundle = getIntent().getExtras();
         if(bundle!=null){
             String value = bundle.getString("Start");
-            if(value.equals("Start reloading")){
-                Toast.makeText(getApplicationContext(), "Reloading to get newest mail...", Toast.LENGTH_LONG).show();
-                mainMakeRequest = new MainMakeRequest();
-                mainMakeRequest.new MainRequest(SplashActivity.mCredential).execute();
-            }
+//            if(value.equals("Start reloading")){
+//                Toast.makeText(getApplicationContext(), "Reloading to get newest mail...", Toast.LENGTH_LONG).show();
+//                mainMakeRequest = new MainMakeRequest();
+//                mainMakeRequest.new MainRequest(SplashActivity.mCredential).execute();
+//            }
         }
 
     }
@@ -201,7 +201,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 mainMakeRequest.new MainRequest(SplashActivity.mCredential).execute();
                 mainSentMakeRequest = new MainSentMakeRequest();
                 mainSentMakeRequest.new MainSentRequest(SplashActivity.mCredential).execute();
-//                new MakeRequestTask(SplashActivity.mCredential).execute();
+
 
                 break;
             case R.id.overflow_button:
@@ -301,6 +301,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 mProgress.show();
             }
 
+            @Override
+            protected void onPostExecute(List<Mail> output) {
+                super.onPostExecute(output);
+                Intent intent = new Intent(MainActivity.this, MainActivity.class);
+                MainActivity.this.startActivity(intent);
+                finish();
+            }
         }
     }
     public class AsyncSend extends AsyncTask<Void, Void, Boolean> {

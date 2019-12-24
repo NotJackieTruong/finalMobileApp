@@ -82,7 +82,7 @@ public class SplashActivity extends AppCompatActivity {
     static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
 
     public static final String PREF_ACCOUNT_NAME = "accountName";
-    private static final String[] SCOPES = {GmailScopes.GMAIL_LABELS, GmailScopes.MAIL_GOOGLE_COM};
+    public static final String[] SCOPES = {GmailScopes.GMAIL_LABELS, GmailScopes.MAIL_GOOGLE_COM};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,10 +114,12 @@ public class SplashActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        new SplashActivity.MakeSentRequestTask(mCredential).execute();
+        new SplashActivity.MakeRequestTask(mCredential).execute();
         getResultsFromApi();
     }
 
-    private void getResultsFromApi() {
+    public void getResultsFromApi() {
         if (!isGooglePlayServicesAvailable()) {
             acquireGooglePlayServices();
         } else if (mCredential.getSelectedAccountName() == null) {
@@ -127,8 +129,7 @@ public class SplashActivity extends AppCompatActivity {
         } else {
             String userName = mCredential.getSelectedAccountName();
             System.out.println("Chosen user name(from result api): " + userName);
-            new SplashActivity.MakeSentRequestTask(mCredential).execute();
-            new SplashActivity.MakeRequestTask(mCredential).execute();
+
 
         }
 
@@ -136,7 +137,7 @@ public class SplashActivity extends AppCompatActivity {
 
 
     @AfterPermissionGranted(REQUEST_PERMISSION_GET_ACCOUNTS)
-    private void chooseAccount() {
+    public void chooseAccount() {
         if (EasyPermissions.hasPermissions(
                 this, Manifest.permission.GET_ACCOUNTS)) {
             String accountName = getPreferences(Context.MODE_PRIVATE)
