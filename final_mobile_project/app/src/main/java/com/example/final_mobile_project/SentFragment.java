@@ -50,11 +50,16 @@ public class SentFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-
         View view = (View)inflater.inflate(R.layout.sent_fragment, container, false);
         sentFragment = (LinearLayout)view.findViewById(R.id.sent_fragment_layout);
-        Log.i("ARRAY SIZE", String.valueOf(mails.size()));
-        new SentFragment.MakeRequestTask(SplashActivity.mCredential).execute();
+        for(int i=0; i<SplashActivity.sentMails.size(); i++){
+            String emailTo = SplashActivity.sentMails.get(i).getTo();
+            String emailSubject = SplashActivity.sentMails.get(i).getSubject();
+            String emailContent = SplashActivity.sentMails.get(i).getContent();
+            String emailDate = SplashActivity.sentMails.get(i).getDate();
+            displayEmail(emailTo, emailSubject, emailContent, emailDate);
+        }
+
         return view;
     }
 
@@ -66,116 +71,7 @@ public class SentFragment extends Fragment {
 
     }
 
-    private class MakeRequestTask extends AsyncTask<Void, Void, List<Mail>> {
-        private com.google.api.services.gmail.Gmail mService = null;
-        private Exception mLastError = null;
 
-        MakeRequestTask(GoogleAccountCredential credential) {
-            HttpTransport transport = AndroidHttp.newCompatibleTransport();
-            JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-            mService = new com.google.api.services.gmail.Gmail.Builder(
-                    transport, jsonFactory, credential)
-                    .setApplicationName("Gmail API Android Quickstart")
-                    .build();
-        }
-
-        @Override
-        protected List<Mail> doInBackground(Void... params) {
-            try {
-                return getDataFromApi();
-            } catch (Exception e) {
-                mLastError = e;
-                cancel(true);
-                return null;
-            }
-        }
-
-        private String filterEmail(String text) {
-            String result =  "";
-            boolean check = false;
-            for (int i = 0; i < text.length(); i++) {
-                char c = text.charAt(i);
-                if (c == '<') {
-                    check = true;
-                }
-                if (c == '>') {
-                    return  result;
-                }
-                if (check && c != '<') {
-                    result = result + c;
-                }
-            }
-            return text;
-        }
-
-        private List<Mail> getDataFromApi() throws IOException {
-            result = new ArrayList<Mail>();
-            try {
-                List<Message> messages = GmailSetup.listAllMessages(mService, "me", 20);
-
-                for (int i = 0; i < messages.size(); i++) {
-                    Message messageDetail = GmailSetup.getMessage(mService, "me", messages.get(i).getId(), "full");
-                    String content = messageDetail.getSnippet();
-                    String subject = "";
-                    String from = "";
-                    String to = "";
-                    String date = "";
-                    List<MessagePartHeader> messagePartHeader = messageDetail.getPayload().getHeaders();
-                    for (int j = 0; j < messagePartHeader.size(); j++) {
-                        if (messagePartHeader.get(j).getName().equals("Subject")) {
-                            subject = messagePartHeader.get(j).getValue();
-                        }
-                        if (messagePartHeader.get(j).getName().equals("From")) {
-                            from = messagePartHeader.get(j).getValue();
-                        }
-                        if (messagePartHeader.get(j).getName().equals("To")) {
-                            to = messagePartHeader.get(j).getValue();
-                        }
-                        if (messagePartHeader.get(j).getName().equals("Date")) {
-                            date = messagePartHeader.get(j).getValue();
-                        }
-                    }
-                    if (subject.length() > 0 && content.length() > 0 && from.length() > 0 && to.length() > 0 && date.length() > 0) {
-
-                        Mail mail = new Mail(subject, content, filterEmail(from), filterEmail(to), date);
-                        result.add(mail);
-
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            return result;
-        }
-
-
-        @Override
-        protected void onPreExecute() {
-            mProgress = new ProgressDialog(getContext());
-            mProgress.setMessage("Please wait...");
-            mProgress.show();
-        }
-
-        @Override
-        protected void onPostExecute(List<Mail> output) {
-            mProgress.hide();
-            if (output == null || output.size() == 0) {
-//                Toast.makeText(getContext().getApplicationContext(), "Error", Toast.LENGTH_SHORT).show();
-            } else {
-                mails.clear();
-                mails.addAll(output);
-                for(int i=0; i<mails.size(); i++){
-                    displayEmail(mails.get(i).getTo(), mails.get(i).getSubject(), mails.get(i).getContent(), mails.get(i).getDate());
-
-                }
-
-//                Toast.makeText(getContext().getApplicationContext(), "Done", Toast.LENGTH_SHORT).show();
-            }
-//            adapter.notifyDataSetChanged();
-        }
-
-    }
     public void messageDetail(String to, String subject, String content, String date){
         Bundle bundle = new Bundle();
         bundle.putString("to", to);

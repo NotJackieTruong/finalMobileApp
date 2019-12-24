@@ -83,6 +83,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public static final String PREF_ACCOUNT_NAME = "accountName";
     private static final String[] SCOPES = {GmailScopes.GMAIL_LABELS, GmailScopes.MAIL_GOOGLE_COM};
 
+    MainMakeRequest mainMakeRequest;
+    MainSentMakeRequest mainSentMakeRequest;
+
     SplashActivity splashActivity;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,6 +122,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
 
+
+
     }
 
     public static MainActivity getInstance(){
@@ -138,7 +143,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             String value = bundle.getString("Start");
             if(value.equals("Start reloading")){
                 Toast.makeText(getApplicationContext(), "Reloading to get newest mail...", Toast.LENGTH_LONG).show();
-//                new MakeRequestTask(SplashActivity.mCredential).execute();
+                mainMakeRequest = new MainMakeRequest();
+                mainMakeRequest.new MainRequest(SplashActivity.mCredential).execute();
             }
         }
 
@@ -191,8 +197,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
             case R.id.refresh:
-                MainMakeRequest mainMakeRequest = new MainMakeRequest();
+                mainMakeRequest = new MainMakeRequest();
                 mainMakeRequest.new MainRequest(SplashActivity.mCredential).execute();
+                mainSentMakeRequest = new MainSentMakeRequest();
+                mainSentMakeRequest.new MainSentRequest(SplashActivity.mCredential).execute();
 //                new MakeRequestTask(SplashActivity.mCredential).execute();
 
                 break;
@@ -271,11 +279,29 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                    mails.addAll(output);
                }
 
-               Toast.makeText(MainActivity.this, "Loaded successfully", Toast.LENGTH_SHORT).show();
+//               Toast.makeText(MainActivity.this, "Loaded successfully", Toast.LENGTH_SHORT).show();
            }
 
        }
 
+    }
+
+    public class MainSentMakeRequest extends SplashActivity{
+        private class MainSentRequest extends MakeSentRequestTask{
+
+            MainSentRequest(GoogleAccountCredential credential) {
+                super(credential);
+            }
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                mProgress = new ProgressDialog(MainActivity.this);
+                mProgress.setMessage("Please wait...");
+                mProgress.show();
+            }
+
+        }
     }
     public class AsyncSend extends AsyncTask<Void, Void, Boolean> {
         private Gmail mService = null;

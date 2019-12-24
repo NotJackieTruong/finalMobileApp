@@ -71,8 +71,6 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
     }
 
     public void changeAccount(){
-        String accountName = getPreferences(Context.MODE_PRIVATE)
-                .getString(SplashActivity.PREF_ACCOUNT_NAME, null);
         SplashActivity.mCredential.setSelectedAccountName(" ");
         startActivityForResult(
                 SplashActivity.mCredential.newChooseAccountIntent(),
@@ -81,8 +79,7 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
     }
 
     @Override
-    protected void onActivityResult(
-            int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
             case SplashActivity.REQUEST_ACCOUNT_PICKER:

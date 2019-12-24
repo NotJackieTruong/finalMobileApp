@@ -1,6 +1,7 @@
 package com.example.final_mobile_project;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -18,12 +19,14 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.amulyakhare.textdrawable.TextDrawable;
@@ -43,6 +46,8 @@ import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.Message;
 import com.google.api.services.gmail.model.MessagePartHeader;
 
+import org.w3c.dom.Text;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,7 +61,8 @@ import pub.devrel.easypermissions.EasyPermissions;
 
 public class SplashActivity extends AppCompatActivity {
     LinearLayout inboxRow;
-    static ArrayList<Mail> mails = new ArrayList<>();
+    static ArrayList<Mail> mails = new ArrayList<>();//inbox mails
+    static ArrayList<Mail> sentMails = new ArrayList<>();
     List<Mail> result;
     ProgressBar progressBar;
     LinearLayout inboxFragment;
@@ -121,11 +127,13 @@ public class SplashActivity extends AppCompatActivity {
         } else {
             String userName = mCredential.getSelectedAccountName();
             System.out.println("Chosen user name(from result api): " + userName);
+            new SplashActivity.MakeSentRequestTask(mCredential).execute();
             new SplashActivity.MakeRequestTask(mCredential).execute();
 
         }
 
     }
+
 
     @AfterPermissionGranted(REQUEST_PERMISSION_GET_ACCOUNTS)
     private void chooseAccount() {
@@ -257,8 +265,8 @@ public class SplashActivity extends AppCompatActivity {
 
 
     public class MakeRequestTask extends AsyncTask<Void, Integer, List<Mail>> {
-        private com.google.api.services.gmail.Gmail mService = null;
-        private Exception mLastError = null;
+        public com.google.api.services.gmail.Gmail mService = null;
+        public Exception mLastError = null;
 
         MakeRequestTask(GoogleAccountCredential credential) {
             HttpTransport transport = AndroidHttp.newCompatibleTransport();
@@ -281,7 +289,7 @@ public class SplashActivity extends AppCompatActivity {
             }
         }
 
-        private String filterEmail(String text) {
+        public String filterEmail(String text) {
             String result =  "";
             boolean check = false;
             for (int i = 0; i < text.length(); i++) {
@@ -302,7 +310,7 @@ public class SplashActivity extends AppCompatActivity {
         private List<Mail> getDataFromApi() throws IOException {
             List<Mail> result = new ArrayList<Mail>();
             try {
-                List<Message> messages = GmailSetup.listAllInboxMessages(mService, "me", 20);
+                List<Message> messages = GmailSetup.listAllInboxMessages(mService, "me", 10);
 
                 for (int i = 0; i < messages.size(); i++) {
                     Message messageDetail = GmailSetup.getMessage(mService, "me", messages.get(i).getId(), "full");
@@ -354,6 +362,79 @@ public class SplashActivity extends AppCompatActivity {
             Toast.makeText(getApplicationContext(), "Loaded successfully", Toast.LENGTH_SHORT).show();
         }
 
+    }
+
+    public class MakeSentRequestTask extends MakeRequestTask{
+
+        MakeSentRequestTask(GoogleAccountCredential credential) {
+            super(credential);
+        }
+
+        @Override
+        protected List<Mail> doInBackground(Void... params) {
+            try {
+                return getSentDataFromApi();
+            } catch (Exception e) {
+                mLastError = e;
+                cancel(true);
+                return null;
+            }
+        }
+
+        private List<Mail> getSentDataFromApi() throws IOException {
+            List<Mail> result = new ArrayList<Mail>();
+            try {
+                List<Message> messages = GmailSetup.listAllMessages(mService, "me", 10);
+
+                for (int i = 0; i < messages.size(); i++) {
+                    Message messageDetail = GmailSetup.getMessage(mService, "me", messages.get(i).getId(), "full");
+                    String content = messageDetail.getSnippet();
+                    String subject = "";
+                    String from = "";
+                    String to = "";
+                    String date = "";
+                    List<MessagePartHeader> messagePartHeader = messageDetail.getPayload().getHeaders();
+                    for (int j = 0; j < messagePartHeader.size(); j++) {
+                        if (messagePartHeader.get(j).getName().equals("Subject")) {
+                            subject = messagePartHeader.get(j).getValue();
+                        }
+                        if (messagePartHeader.get(j).getName().equals("From")) {
+                            from = messagePartHeader.get(j).getValue();
+                        }
+                        if (messagePartHeader.get(j).getName().equals("To")) {
+                            to = messagePartHeader.get(j).getValue();
+                        }
+                        if (messagePartHeader.get(j).getName().equals("Date")) {
+                            date = messagePartHeader.get(j).getValue();
+                        }
+                    }
+                    if (subject.length() > 0 && content.length() > 0 && from.length() > 0 && to.length() > 0 && date.length() > 0) {
+                        Mail mail = new Mail(subject, content, filterEmail(from), filterEmail(to), date);
+                        result.add(mail);
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(List<Mail> output) {
+            mProgress.hide();
+            if (output == null || output.size() == 0) {
+                Toast.makeText(SplashActivity.this, "Error", Toast.LENGTH_SHORT).show();
+            } else {
+                sentMails.clear();
+                sentMails.addAll(output);
+            }
+
+//            Intent intent =new Intent(SplashActivity.this,MainActivity.class);
+//            startActivity(intent);
+//            // close this activity
+//            finish();
+//            Toast.makeText(getApplicationContext(), "Loaded successfully", Toast.LENGTH_SHORT).show();
+        }
     }
 
 

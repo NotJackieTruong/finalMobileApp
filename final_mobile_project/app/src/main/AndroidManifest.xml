@@ -35,6 +35,7 @@
         <activity android:name=".ComposeMail" />
         <activity android:name=".MessageDetail" />
         <activity android:name=".LogIn" />
+        <activity android:name=".NavHeader"/>
         <activity
             android:name=".MainActivity"
             android:theme="@style/AppTheme.NoActionBar">
