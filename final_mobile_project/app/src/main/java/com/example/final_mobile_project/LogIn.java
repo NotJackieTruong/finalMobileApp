@@ -56,24 +56,10 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
         tvEmail.setText(userSelectedName);
     }
 
-//    public void updateUI(Boolean isLogged){
-//        if(isLogged){
-//            accSection.setVisibility(View.VISIBLE);
-//            signInButton.setVisibility(View.GONE);
-//        } else{
-//            accSection.setVisibility(View.GONE);
-//            signInButton.setVisibility(View.VISIBLE);
-//        }
-//    }
-
     @Override
     protected void onResume() {
         super.onResume();
     }
-
-//    public static LogIn getInstance(){
-//        return instance;
-//    }
 
     @Override
     public void onClick(View v) {

@@ -1,5 +1,6 @@
 package com.example.final_mobile_project;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
@@ -45,6 +46,7 @@ public class SentFragment extends Fragment {
     LinearLayout sentFragment, sentRow;
     ArrayList<Mail> mails = new ArrayList<>();
     List<Mail> result;
+    static ProgressDialog mProgress;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -150,13 +152,14 @@ public class SentFragment extends Fragment {
 
         @Override
         protected void onPreExecute() {
-//            mOutputText.setText("");
-            MainActivity.mProgress.show();
+            mProgress = new ProgressDialog(getContext());
+            mProgress.setMessage("Please wait...");
+            mProgress.show();
         }
 
         @Override
         protected void onPostExecute(List<Mail> output) {
-            MainActivity.mProgress.hide();
+            mProgress.hide();
             if (output == null || output.size() == 0) {
 //                Toast.makeText(getContext().getApplicationContext(), "Error", Toast.LENGTH_SHORT).show();
             } else {

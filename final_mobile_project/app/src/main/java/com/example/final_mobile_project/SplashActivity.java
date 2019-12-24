@@ -2,14 +2,17 @@ package com.example.final_mobile_project;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -29,6 +32,8 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlayServicesAvailabilityIOException;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -43,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.zip.Inflater;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
@@ -55,6 +61,7 @@ public class SplashActivity extends AppCompatActivity {
     ProgressBar progressBar;
     LinearLayout inboxFragment;
     static SplashActivity instance;
+    MainActivity mainActivity;
 
     static String from = " ", to = " ", subject = " ", content = "", date = "";
     Boolean isFirst = true;
@@ -78,8 +85,8 @@ public class SplashActivity extends AppCompatActivity {
         instance = this;
         progressBar = (ProgressBar)findViewById(R.id.progressBar);
 
-        mProgress = new ProgressDialog(this);
-        mProgress.setMessage("Calling Gmail API ...");
+        mProgress = new ProgressDialog(SplashActivity.this);
+        mProgress.setMessage("Please wait ...");
 
         // Initialize credentials and service object.
         mCredential = GoogleAccountCredential.usingOAuth2(
@@ -93,16 +100,21 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         getResultsFromApi();
     }
 
-    public void getResultsFromApi() {
+    private void getResultsFromApi() {
         if (!isGooglePlayServicesAvailable()) {
             acquireGooglePlayServices();
         } else if (mCredential.getSelectedAccountName() == null) {
-//            Toast.makeText(MainActivity.this, "PLEASE LOGIN FIRST", Toast.LENGTH_LONG).show();
             chooseAccount();
         } else if (!isDeviceOnline()) {
             Toast.makeText(SplashActivity.this, "Connection error!", Toast.LENGTH_LONG).show();
@@ -110,15 +122,13 @@ public class SplashActivity extends AppCompatActivity {
             String userName = mCredential.getSelectedAccountName();
             System.out.println("Chosen user name(from result api): " + userName);
             new SplashActivity.MakeRequestTask(mCredential).execute();
-            if (from.length() > 0 && to.length() > 0 && subject.length() > 0 && content.length() > 0) {
-//                new SplashActivity().AsyncSend(mCredential).execute();
-            }
+
         }
 
     }
 
     @AfterPermissionGranted(REQUEST_PERMISSION_GET_ACCOUNTS)
-    public void chooseAccount() {
+    private void chooseAccount() {
         if (EasyPermissions.hasPermissions(
                 this, Manifest.permission.GET_ACCOUNTS)) {
             String accountName = getPreferences(Context.MODE_PRIVATE)
@@ -261,6 +271,7 @@ public class SplashActivity extends AppCompatActivity {
 
         @Override
         protected List<Mail> doInBackground(Void... params) {
+
             try {
                 return getDataFromApi();
             } catch (Exception e) {
@@ -325,7 +336,7 @@ public class SplashActivity extends AppCompatActivity {
             }
             return result;
         }
-        
+
         @Override
         protected void onPostExecute(List<Mail> output) {
             mProgress.hide();
