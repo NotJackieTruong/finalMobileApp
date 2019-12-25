@@ -50,6 +50,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
+import com.google.api.services.gmail.model.Draft;
 import com.google.api.services.gmail.model.Message;
 import com.google.api.services.gmail.model.MessagePartHeader;
 
@@ -59,6 +60,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.mail.internet.MimeMessage;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -70,6 +73,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     static MainActivity instance;
     static String from = " ", to = " ", subject = " ", content = "", date = "";
     Boolean isFirst = true;
+    
 
 
     static GoogleAccountCredential mCredential;
@@ -87,6 +91,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     MainSentMakeRequest mainSentMakeRequest;
 
     SplashActivity splashActivity;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.i("ONCREATE", "THIS IS ON CREATE");
@@ -121,12 +126,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
 
-
-
-
     }
 
-    public static MainActivity getInstance(){
+    public static MainActivity getInstance() {
         return instance;
     }
 
@@ -135,11 +137,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onResume() {
         super.onResume();
         Log.i("ONSRESUME", "THIS IS ON RESUME");
-        if(from.length()>0 && to.length()>0 && subject.length()>0 && content.length()>0){
+        if (from.length() > 0 && to.length() > 0 && subject.length() > 0 && content.length() > 0) {
             new MainActivity.AsyncSend(SplashActivity.mCredential).execute();
         }
         Bundle bundle = getIntent().getExtras();
-        if(bundle!=null){
+        if (bundle != null) {
             String value = bundle.getString("Start");
 //            if(value.equals("Start reloading")){
 //                Toast.makeText(getApplicationContext(), "Reloading to get newest mail...", Toast.LENGTH_LONG).show();
@@ -195,7 +197,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()){
+        switch (item.getItemId()) {
             case R.id.refresh:
                 mainMakeRequest = new MainMakeRequest();
                 mainMakeRequest.new MainRequest(SplashActivity.mCredential).execute();
@@ -210,7 +212,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
-                        switch (item.getItemId()){
+                        switch (item.getItemId()) {
                             case R.id.settings:
 //                                Intent i = new Intent(getApplicationContext(), PrefActivity.class);
 //                                startActivity(i);
@@ -253,41 +255,41 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    public class MainMakeRequest extends SplashActivity{
+    public class MainMakeRequest extends SplashActivity {
 
-       private class MainRequest extends MakeRequestTask{
+        private class MainRequest extends MakeRequestTask {
 
-           MainRequest(GoogleAccountCredential credential) {
-               super(credential);
-           }
+            MainRequest(GoogleAccountCredential credential) {
+                super(credential);
+            }
 
-           @Override
-           protected void onPreExecute() {
-               super.onPreExecute();
-               mProgress = new ProgressDialog(MainActivity.this);
-               mProgress.setMessage("Please wait...");
-               mProgress.show();
-           }
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                mProgress = new ProgressDialog(MainActivity.this);
+                mProgress.setMessage("Please wait...");
+                mProgress.show();
+            }
 
-           @Override
-           protected void onPostExecute(List<Mail> output) {
-               mProgress.hide();
-               if (output == null || output.size() == 0) {
-                   Toast.makeText(MainActivity.this, "Error", Toast.LENGTH_SHORT).show();
-               } else {
-                   mails.clear();
-                   mails.addAll(output);
-               }
+            @Override
+            protected void onPostExecute(List<Mail> output) {
+                mProgress.hide();
+                if (output == null || output.size() == 0) {
+                    Toast.makeText(MainActivity.this, "Error", Toast.LENGTH_SHORT).show();
+                } else {
+                    mails.clear();
+                    mails.addAll(output);
+                }
 
 //               Toast.makeText(MainActivity.this, "Loaded successfully", Toast.LENGTH_SHORT).show();
-           }
+            }
 
-       }
+        }
 
     }
 
-    public class MainSentMakeRequest extends SplashActivity{
-        private class MainSentRequest extends MakeSentRequestTask{
+    public class MainSentMakeRequest extends SplashActivity {
+        private class MainSentRequest extends MakeSentRequestTask {
 
             MainSentRequest(GoogleAccountCredential credential) {
                 super(credential);
@@ -309,9 +311,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 finish();
             }
         }
+
+
     }
+
     public class AsyncSend extends AsyncTask<Void, Void, Boolean> {
-        private Gmail mService = null;
+        public Gmail mService = null;
 
         AsyncSend(GoogleAccountCredential credential) {
             HttpTransport transport = AndroidHttp.newCompatibleTransport();
@@ -364,4 +369,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         }
     }
+
+
 }
+

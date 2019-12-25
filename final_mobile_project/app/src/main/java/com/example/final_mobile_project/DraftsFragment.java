@@ -21,66 +21,71 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class DraftsFragment extends Fragment {
+    static TextView userAccountName, userImage, inboxSubject, inboxContent, inboxDate;
+    LinearLayout draftFragment, draftRow;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = (View)inflater.inflate(R.layout.drafts_fragment, container, false);
-        LinearLayout setFragment = (LinearLayout)view.findViewById(R.id.draft_fragment_layout);
+        draftFragment = (LinearLayout)view.findViewById(R.id.draft_fragment_layout);
 
-        for(int i = 0; i<5; i++){
-            LinearLayout draftRow = (LinearLayout)inflater.inflate(R.layout.inbox_row, container, false);
+        for(int i = 0; i<SplashActivity.draftMails.size(); i++){
+            String emailFrom= SplashActivity.draftMails.get(i).getFrom();
+            String emailSubject=SplashActivity.draftMails.get(i).getSubject();
+            String emailContent= SplashActivity.draftMails.get(i).getContent();
+            String emailDate=SplashActivity.draftMails.get(i).getDate();
+            System.out.println("DRAFT: FROM: "+emailFrom+", SUBJECT:"+emailSubject+", CONTENT: "+emailContent+", DATE: "+emailDate+", LABLE: ");
+            displayEmail(SplashActivity.draftMails.get(i).getFrom(), SplashActivity.draftMails.get(i).getSubject(), SplashActivity.draftMails.get(i).getContent(), SplashActivity.draftMails.get(i).getDate());
 
-            //receive string from ComposeMail activity
-//        String messReceiver = this.getArguments().getString("receiver").toString();
-//        String messTopic = getArguments().getString("topic");
-//        String messContent = getArguments().getString("content");
-
-
-            final TextView userAccountName = draftRow.findViewById(R.id.user_account_name);
-            userAccountName.setText("UsernameABCD");
-
-//          create first letter icon like Gmail
-            String firstLetter = userAccountName.getText().toString();
-            firstLetter=firstLetter.substring(0,1);
-            ColorGenerator generator = ColorGenerator.MATERIAL;
-            int color = generator.getColor(userAccountName);
-            TextDrawable textDrawable = TextDrawable.builder().buildRound(firstLetter, color);
-
-            ImageView userImage = draftRow.findViewById(R.id.user_image);
-            userImage.setImageDrawable(textDrawable);
-
-            final TextView inboxTopic = draftRow.findViewById(R.id.inbox_topic);
-            inboxTopic.setText("MobileAppDev");
-
-            final TextView inboxContent = draftRow.findViewById(R.id.inbox_content);
-            inboxContent.setText("On progress ...");
-
-            TextView inboxDate = draftRow.findViewById(R.id.date_time);
-            Date date = Calendar.getInstance().getTime();
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
-            String dateString = simpleDateFormat.format(date);
-            inboxDate.setText(dateString);
-            setFragment.addView(draftRow);
-            draftRow.setClickable(true);
-            draftRow.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    //transfer the text to the message detail
-                    String messTopic = inboxTopic.getText().toString();
-                    String messContent = inboxContent.getText().toString();
-                    Intent i = new Intent(getActivity().getApplicationContext(), MessageDetail.class);
-                    i.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                    Bundle b = new Bundle();
-                    b.putString("topic", messTopic);
-                    b.putString("content", messContent);
-                    i.putExtras(b);
-                    startActivity(i);
-
-                }
-            });
         }
 
 
         return view;
+    }
+
+    public void displayEmail(final String from, final String subject, final String content, final String date){
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+        draftRow=(LinearLayout)inflater.inflate(R.layout.inbox_row, draftFragment, false);
+
+        //display mail info
+        userAccountName = draftRow.findViewById(R.id.user_account_name);
+        userAccountName.setText(from);
+//          create first letter icon like Gmail
+        String firstLetter = userAccountName.getText().toString();
+        firstLetter = firstLetter.substring(0, 1);
+        ColorGenerator generator = ColorGenerator.MATERIAL;
+        int color = generator.getColor(userAccountName);
+        TextDrawable textDrawable = TextDrawable.builder().buildRound(firstLetter, color);
+        ImageView userImage = draftRow.findViewById(R.id.user_image);
+        userImage.setImageDrawable(textDrawable);
+
+        inboxSubject = draftRow.findViewById(R.id.inbox_topic);
+        inboxSubject.setText(subject);
+
+        inboxContent = draftRow.findViewById(R.id.inbox_content);
+        inboxContent.setText(content);
+        inboxDate = draftRow.findViewById(R.id.date_time);
+        inboxDate.setText(date);
+        draftFragment.addView(draftRow);
+
+        draftRow.setClickable(true);
+        draftRow.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                messageDetail(from, subject, content, date);
+            }
+        });
+    }
+
+    public void messageDetail(String to, String subject, String content, String date){
+        Bundle bundle = new Bundle();
+        bundle.putString("to", to);
+        bundle.putString("subject", subject);
+        bundle.putString("content", content);
+        bundle.putString("date", date);
+        Intent intent = new Intent(getContext(), MessageDetail.class);
+        intent.putExtras(bundle);
+        startActivity(intent);
+
     }
 }

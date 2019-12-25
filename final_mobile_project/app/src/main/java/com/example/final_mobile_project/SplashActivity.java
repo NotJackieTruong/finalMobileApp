@@ -63,6 +63,7 @@ public class SplashActivity extends AppCompatActivity {
     LinearLayout inboxRow;
     static ArrayList<Mail> mails = new ArrayList<>();//inbox mails
     static ArrayList<Mail> sentMails = new ArrayList<>();
+    static ArrayList<Mail> draftMails = new ArrayList<>();
     List<Mail> result;
     ProgressBar progressBar;
     LinearLayout inboxFragment;
@@ -89,7 +90,7 @@ public class SplashActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
         instance = this;
-        progressBar = (ProgressBar)findViewById(R.id.progressBar);
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
 
         mProgress = new ProgressDialog(SplashActivity.this);
         mProgress.setMessage("Please wait ...");
@@ -101,7 +102,7 @@ public class SplashActivity extends AppCompatActivity {
 
     }
 
-    public static SplashActivity getInstance(){
+    public static SplashActivity getInstance() {
         return instance;
     }
 
@@ -116,6 +117,7 @@ public class SplashActivity extends AppCompatActivity {
         super.onResume();
         new SplashActivity.MakeSentRequestTask(mCredential).execute();
         new SplashActivity.MakeRequestTask(mCredential).execute();
+        new SplashActivity.MakeDraftRequestTask(mCredential).execute();
         getResultsFromApi();
     }
 
@@ -237,17 +239,17 @@ public class SplashActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    public String getUserEmail(String name){
+    public String getUserEmail(String name) {
         AccountManager accountManager = AccountManager.get(this);
         Account[] accounts = accountManager.getAccountsByType("com.google");
         List<String> possibleEmails = new LinkedList<String>();
 
-        for(Account account: accounts){
+        for (Account account : accounts) {
             possibleEmails.add(account.name);
         }
-        for(int i=0; i<possibleEmails.size(); i++){
-            if(possibleEmails.get(i).equals(name)){
-                System.out.println("USERNAME: "+possibleEmails.get(i));
+        for (int i = 0; i < possibleEmails.size(); i++) {
+            if (possibleEmails.get(i).equals(name)) {
+                System.out.println("USERNAME: " + possibleEmails.get(i));
                 return possibleEmails.get(i);
 
             }
@@ -291,7 +293,7 @@ public class SplashActivity extends AppCompatActivity {
         }
 
         public String filterEmail(String text) {
-            String result =  "";
+            String result = "";
             boolean check = false;
             for (int i = 0; i < text.length(); i++) {
                 char c = text.charAt(i);
@@ -299,7 +301,7 @@ public class SplashActivity extends AppCompatActivity {
                     check = true;
                 }
                 if (c == '>') {
-                    return  result;
+                    return result;
                 }
                 if (check && c != '<') {
                     result = result + c;
@@ -356,7 +358,7 @@ public class SplashActivity extends AppCompatActivity {
                 mails.addAll(output);
             }
 
-            Intent intent =new Intent(SplashActivity.this,MainActivity.class);
+            Intent intent = new Intent(SplashActivity.this, MainActivity.class);
             startActivity(intent);
             // close this activity
             finish();
@@ -365,7 +367,7 @@ public class SplashActivity extends AppCompatActivity {
 
     }
 
-    public class MakeSentRequestTask extends MakeRequestTask{
+    public class MakeSentRequestTask extends MakeRequestTask {
 
         MakeSentRequestTask(GoogleAccountCredential credential) {
             super(credential);
@@ -438,5 +440,72 @@ public class SplashActivity extends AppCompatActivity {
         }
     }
 
+    public class MakeDraftRequestTask extends MakeRequestTask {
 
+        MakeDraftRequestTask(GoogleAccountCredential credential) {
+            super(credential);
+        }
+        @Override
+        protected List<Mail> doInBackground(Void... params) {
+            try {
+                return getDraftDataFromApi();
+            } catch (Exception e) {
+                mLastError = e;
+                cancel(true);
+                return null;
+            }
+        }
+        private List<Mail> getDraftDataFromApi() throws IOException {
+            List<Mail> result = new ArrayList<Mail>();
+            try {
+                List<Message> messages = GmailSetup.listAllDraftMessages(mService, "me", 10);
+
+                for (int i = 0; i < messages.size(); i++) {
+                    Message messageDetail = GmailSetup.getMessage(mService, "me", messages.get(i).getId(), "full");
+                    String content = messageDetail.getSnippet();
+                    String subject = "";
+                    String from = "";
+                    String to = "";
+                    String date = "";
+                    List<MessagePartHeader> messagePartHeader = messageDetail.getPayload().getHeaders();
+                    for (int j = 0; j < messagePartHeader.size(); j++) {
+                        if (messagePartHeader.get(j).getName().equals("Subject")) {
+                            subject = messagePartHeader.get(j).getValue();
+                        }
+                        if (messagePartHeader.get(j).getName().equals("From")) {
+                            from = messagePartHeader.get(j).getValue();
+                        }
+                        if (messagePartHeader.get(j).getName().equals("To")) {
+                            to = messagePartHeader.get(j).getValue();
+                        }
+                        if (messagePartHeader.get(j).getName().equals("Date")) {
+                            date = messagePartHeader.get(j).getValue();
+                        }
+                    }
+                    if (subject.length() > 0 && content.length() > 0 && from.length() > 0 && to.length() > 0 && date.length() > 0) {
+                        Mail mail = new Mail(subject, content, filterEmail(from), filterEmail(to), date);
+                        result.add(mail);
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(List<Mail> output) {
+            mProgress.hide();
+            if (output == null || output.size() == 0) {
+                Toast.makeText(SplashActivity.this, "Error", Toast.LENGTH_SHORT).show();
+            } else {
+                draftMails.clear();
+                draftMails.addAll(output);
+            }
+            finish();
+
+        }
+
+
+    }
 }

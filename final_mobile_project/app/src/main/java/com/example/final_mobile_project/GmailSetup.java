@@ -2,6 +2,7 @@ package com.example.final_mobile_project;
 
 import com.google.api.client.repackaged.org.apache.commons.codec.binary.Base64;
 import com.google.api.services.gmail.Gmail;
+import com.google.api.services.gmail.model.Draft;
 import com.google.api.services.gmail.model.Label;
 import com.google.api.services.gmail.model.ListLabelsResponse;
 import com.google.api.services.gmail.model.ListMessagesResponse;
@@ -129,6 +130,22 @@ public class GmailSetup {
         return messages;
     }
 
+    public static List<Message> listAllDraftMessages(Gmail service, String userId, long max) throws IOException {
+        ListMessagesResponse response;
+        List labelIds = new ArrayList();
+        labelIds.add("DRAFT");
+        if (max < 1) {
+            response = service.users().messages().list(userId).setLabelIds(labelIds).execute();
+        } else {
+            response = service.users().messages().list(userId).setLabelIds(labelIds).setMaxResults(max).execute();
+        }
+        List<Message> messages = new ArrayList<Message>();
+        if (response.getMessages() != null) {
+            messages.addAll(response.getMessages());
+        }
+        return messages;
+    }
+
 
     public static List<String> getLabels(Gmail service, String userId){
         ListLabelsResponse listResponse = null;
@@ -150,5 +167,19 @@ public class GmailSetup {
             e.printStackTrace();
         }
         return labelsStr;
+    }
+
+    public static Draft createDraft(Gmail service,
+                                    String userId,
+                                    MimeMessage emailContent)
+            throws MessagingException, IOException {
+        Message message = createMessageWithEmail(emailContent);
+        Draft draft = new Draft();
+        draft.setMessage(message);
+        draft = service.users().drafts().create(userId, draft).execute();
+
+        System.out.println("Draft id: " + draft.getId());
+        System.out.println(draft.toPrettyString());
+        return draft;
     }
 }
