@@ -6,13 +6,15 @@ public class Mail {
     private String from;
     private String to;
     private String date;
+    private String id;
 
-    public Mail(String subject, String content, String from, String to, String date) {
+    public Mail(String subject, String content, String from, String to, String date, String id) {
         this.subject = subject;
         this.content = content;
         this.from = from;
         this.to = to;
         this.date = date;
+        this.id = id;
     }
 
     public String getSubject() {
@@ -53,5 +55,13 @@ public class Mail {
 
     public void setDate(String date) {
         this.date = date;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }

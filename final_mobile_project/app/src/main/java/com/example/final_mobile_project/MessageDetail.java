@@ -14,7 +14,7 @@ public class MessageDetail extends AppCompatActivity {
         Bundle b = getIntent().getExtras();
 
         String messTopic = b.getString("subject");
-        TextView messtopic= (TextView)findViewById(R.id.topic);
+        TextView messtopic= (TextView)findViewById(R.id.subject);
         messtopic.setText(messTopic);
 
         String messContent = b.getString("content");

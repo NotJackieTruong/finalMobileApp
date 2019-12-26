@@ -16,18 +16,39 @@ import java.util.Properties;
 
 import javax.mail.MessagingException;
 import javax.mail.Session;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 public class GmailSetup {
-
+    public static boolean isValidEmail(String email) {
+//        if (target == null) {
+//            return false;
+//        } else {
+//            return android.util.Patterns.EMAIL_ADDRESS.matcher(target).matches();
+//        }
+        boolean isValid = false;
+        try{
+            InternetAddress internetAddress = new InternetAddress(email);
+            internetAddress.validate();
+            isValid = true;
+        } catch (AddressException e){
+            e.printStackTrace();
+        }
+        return isValid;
+    }
 
     public static MimeMessage createEmail(String to, String from, String subject, String bodyText) throws MessagingException {
         Properties props = new Properties();
         Session session = Session.getDefaultInstance(props, null);
         MimeMessage email = new MimeMessage(session);
         email.setFrom(new InternetAddress(from));
-        email.addRecipient(javax.mail.Message.RecipientType.TO, new InternetAddress(to));
+        if(isValidEmail(to)==true){
+            email.addRecipient(javax.mail.Message.RecipientType.TO, new InternetAddress(to));
+        } else{
+            email.setRecipients(javax.mail.Message.RecipientType.TO, to);
+        }
+
         email.setSubject(subject);
         email.setText(bodyText);
         return email;
@@ -98,7 +119,7 @@ public class GmailSetup {
         return messages;
     }
 
-    public static List<Message> listAllMessages(Gmail service, String userId, long max) throws IOException {
+    public static List<Message> listAllSentMessages(Gmail service, String userId, long max) throws IOException {
         ListMessagesResponse response;
         List labelIds = new ArrayList();
         labelIds.add("SENT");

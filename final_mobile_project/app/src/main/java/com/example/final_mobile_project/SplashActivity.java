@@ -313,7 +313,7 @@ public class SplashActivity extends AppCompatActivity {
         private List<Mail> getDataFromApi() throws IOException {
             List<Mail> result = new ArrayList<Mail>();
             try {
-                List<Message> messages = GmailSetup.listAllInboxMessages(mService, "me", 10);
+                List<Message> messages = GmailSetup.listAllInboxMessages(mService, "me", 8);
 
                 for (int i = 0; i < messages.size(); i++) {
                     Message messageDetail = GmailSetup.getMessage(mService, "me", messages.get(i).getId(), "full");
@@ -322,6 +322,7 @@ public class SplashActivity extends AppCompatActivity {
                     String from = "";
                     String to = "";
                     String date = "";
+                    String id = " ";
                     List<MessagePartHeader> messagePartHeader = messageDetail.getPayload().getHeaders();
                     for (int j = 0; j < messagePartHeader.size(); j++) {
                         if (messagePartHeader.get(j).getName().equals("Subject")) {
@@ -336,9 +337,12 @@ public class SplashActivity extends AppCompatActivity {
                         if (messagePartHeader.get(j).getName().equals("Date")) {
                             date = messagePartHeader.get(j).getValue();
                         }
+                        if(messagePartHeader.get(j).getName().equals("Id")){
+                            id = messagePartHeader.get(j).getValue();
+                        }
                     }
                     if (subject.length() > 0 && content.length() > 0 && from.length() > 0 && to.length() > 0 && date.length() > 0) {
-                        Mail mail = new Mail(subject, content, filterEmail(from), filterEmail(to), date);
+                        Mail mail = new Mail(subject, content, filterEmail(from), filterEmail(to), date, id);
                         result.add(mail);
                     }
                 }
@@ -387,7 +391,7 @@ public class SplashActivity extends AppCompatActivity {
         private List<Mail> getSentDataFromApi() throws IOException {
             List<Mail> result = new ArrayList<Mail>();
             try {
-                List<Message> messages = GmailSetup.listAllMessages(mService, "me", 10);
+                List<Message> messages = GmailSetup.listAllSentMessages(mService, "me", 6);
 
                 for (int i = 0; i < messages.size(); i++) {
                     Message messageDetail = GmailSetup.getMessage(mService, "me", messages.get(i).getId(), "full");
@@ -396,6 +400,7 @@ public class SplashActivity extends AppCompatActivity {
                     String from = "";
                     String to = "";
                     String date = "";
+                    String id = " ";
                     List<MessagePartHeader> messagePartHeader = messageDetail.getPayload().getHeaders();
                     for (int j = 0; j < messagePartHeader.size(); j++) {
                         if (messagePartHeader.get(j).getName().equals("Subject")) {
@@ -410,9 +415,12 @@ public class SplashActivity extends AppCompatActivity {
                         if (messagePartHeader.get(j).getName().equals("Date")) {
                             date = messagePartHeader.get(j).getValue();
                         }
+                        if(messagePartHeader.get(j).getName().equals("Id")){
+                            id = messagePartHeader.get(j).getValue();
+                        }
                     }
                     if (subject.length() > 0 && content.length() > 0 && from.length() > 0 && to.length() > 0 && date.length() > 0) {
-                        Mail mail = new Mail(subject, content, filterEmail(from), filterEmail(to), date);
+                        Mail mail = new Mail(subject, content, filterEmail(from), filterEmail(to), date, id);
                         result.add(mail);
                     }
                 }
@@ -430,6 +438,7 @@ public class SplashActivity extends AppCompatActivity {
             } else {
                 sentMails.clear();
                 sentMails.addAll(output);
+
             }
 
 //            Intent intent =new Intent(SplashActivity.this,MainActivity.class);
@@ -458,7 +467,7 @@ public class SplashActivity extends AppCompatActivity {
         private List<Mail> getDraftDataFromApi() throws IOException {
             List<Mail> result = new ArrayList<Mail>();
             try {
-                List<Message> messages = GmailSetup.listAllDraftMessages(mService, "me", 10);
+                List<Message> messages = GmailSetup.listAllDraftMessages(mService, "me", 5);
 
                 for (int i = 0; i < messages.size(); i++) {
                     Message messageDetail = GmailSetup.getMessage(mService, "me", messages.get(i).getId(), "full");
@@ -467,6 +476,7 @@ public class SplashActivity extends AppCompatActivity {
                     String from = "";
                     String to = "";
                     String date = "";
+                    String id = messages.get(i).getId();
                     List<MessagePartHeader> messagePartHeader = messageDetail.getPayload().getHeaders();
                     for (int j = 0; j < messagePartHeader.size(); j++) {
                         if (messagePartHeader.get(j).getName().equals("Subject")) {
@@ -481,11 +491,13 @@ public class SplashActivity extends AppCompatActivity {
                         if (messagePartHeader.get(j).getName().equals("Date")) {
                             date = messagePartHeader.get(j).getValue();
                         }
+//                        if(messagePartHeader.get(j).getName().equals("Id")){
+//                            id = messagePartHeader.get(j).getValue();
+//                        }
                     }
-                    if (subject.length() > 0 && content.length() > 0 && from.length() > 0 && to.length() > 0 && date.length() > 0) {
-                        Mail mail = new Mail(subject, content, filterEmail(from), filterEmail(to), date);
-                        result.add(mail);
-                    }
+                    Mail mail = new Mail(subject, content, filterEmail(from), to, date, id);
+                    result.add(mail);
+
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -501,11 +513,14 @@ public class SplashActivity extends AppCompatActivity {
             } else {
                 draftMails.clear();
                 draftMails.addAll(output);
+
+
             }
-            finish();
 
         }
 
 
     }
+
+
 }

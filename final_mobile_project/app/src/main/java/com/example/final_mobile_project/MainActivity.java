@@ -7,6 +7,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.Manifest;
@@ -28,6 +30,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.TextView;
@@ -71,9 +74,9 @@ import static com.example.final_mobile_project.SplashActivity.mails;
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, EasyPermissions.PermissionCallbacks {
     private DrawerLayout drawerLayout;
     static MainActivity instance;
-    static String from = " ", to = " ", subject = " ", content = "", date = "";
+
     Boolean isFirst = true;
-    
+
 
 
     static GoogleAccountCredential mCredential;
@@ -88,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final String[] SCOPES = {GmailScopes.GMAIL_LABELS, GmailScopes.MAIL_GOOGLE_COM};
 
     MainMakeRequest mainMakeRequest;
-    MainSentMakeRequest mainSentMakeRequest;
+
 
     SplashActivity splashActivity;
 
@@ -137,9 +140,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onResume() {
         super.onResume();
         Log.i("ONSRESUME", "THIS IS ON RESUME");
-        if (from.length() > 0 && to.length() > 0 && subject.length() > 0 && content.length() > 0) {
-            new MainActivity.AsyncSend(SplashActivity.mCredential).execute();
-        }
+//        if (from.length() > 0 && to.length() > 0 && subject.length() > 0 && content.length() > 0) {
+//            new MainActivity.AsyncSend(SplashActivity.mCredential).execute();
+//        }
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
             String value = bundle.getString("Start");
@@ -149,6 +152,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //                mainMakeRequest.new MainRequest(SplashActivity.mCredential).execute();
 //            }
         }
+
 
     }
 
@@ -164,6 +168,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onStart();
         Log.i("ONSTART", "THIS IS ON START");
 
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
     }
 
     @Override
@@ -200,9 +209,33 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         switch (item.getItemId()) {
             case R.id.refresh:
                 mainMakeRequest = new MainMakeRequest();
-                mainMakeRequest.new MainRequest(SplashActivity.mCredential).execute();
-                mainSentMakeRequest = new MainSentMakeRequest();
-                mainSentMakeRequest.new MainSentRequest(SplashActivity.mCredential).execute();
+
+
+
+                if(InboxFragment.isIsOpen()==true){
+                    System.out.println("INBOX_FRAGMENT");
+                    mainMakeRequest.new MainRequest(SplashActivity.mCredential).execute();
+//                    InboxFragment inboxFragment = new InboxFragment();
+//                    inboxFragment.new MakeRequestTask(SplashActivity.mCredential).execute();
+
+                } else if(SentFragment.isIsOpen()==true){
+                    System.out.println("SENT_FRAGMENT");
+                    mainMakeRequest.new MainSentRequest(SplashActivity.mCredential).execute();
+//                    SentFragment sentFragment = new SentFragment();
+//                    sentFragment.new MakeSentRequestTask(SplashActivity.mCredential).execute();
+
+                } else if(DraftsFragment.isIsOpen()==true){
+                    System.out.println("DRAFT_FRAGMENT");
+                    mainMakeRequest.new MainDraftRequest(SplashActivity.mCredential).execute();
+//                    DraftsFragment draftsFragment = new DraftsFragment();
+//                    DraftsFragment.MainDraftMakeRequest mainDraftMakeRequest = draftsFragment.new MainDraftMakeRequest();
+//                    mainDraftMakeRequest.new MainDraftRequest(SplashActivity.mCredential).execute();
+//                    DraftsFragment draftsFragment = new DraftsFragment();
+//                    draftsFragment.new MakeDraftRequestTask(SplashActivity.mCredential).execute();
+
+                }
+
+
 
 
                 break;
@@ -286,9 +319,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         }
 
-    }
-
-    public class MainSentMakeRequest extends SplashActivity {
         private class MainSentRequest extends MakeSentRequestTask {
 
             MainSentRequest(GoogleAccountCredential credential) {
@@ -306,69 +336,50 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             protected void onPostExecute(List<Mail> output) {
                 super.onPostExecute(output);
-                Intent intent = new Intent(MainActivity.this, MainActivity.class);
-                MainActivity.this.startActivity(intent);
+//                Intent intent = new Intent(MainActivity.this, MainActivity.class);
+//                MainActivity.this.startActivity(intent);
                 finish();
             }
         }
 
+        private class MainDraftRequest extends MakeDraftRequestTask {
+            boolean isFinished;
+            MainDraftRequest(GoogleAccountCredential credential) {
+                super(credential);
+            }
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                mProgress = new ProgressDialog(MainActivity.this);
+                mProgress.setMessage("Please wait...");
+                mProgress.show();
+            }
+            @Override
+            protected void onPostExecute(List<Mail> output) {
+                mProgress.hide();
+                if (output == null || output.size() == 0) {
+//                    Toast.makeText(SplashActivity.this, "Error", Toast.LENGTH_SHORT).show();
+                } else {
+                    draftMails.clear();
+                    draftMails.addAll(output);
+                    DraftsFragment draftsFragment = new DraftsFragment();
+                    draftsFragment.updateUI(SplashActivity.draftMails);
+//                    DraftsFragment draftsFragment = ((DraftsFragment)getSupportFragmentManager().findFragmentById(R.id.inbox_fragment));
+//                    ((DraftsFragment)draftsFragment).updateUI(draftMails);
+//                    DraftsFragment draftsFragment = new DraftsFragment();
+//                    draftsFragment.updateUI(draftMails);
+
+                }
+
+            }
+        }
+
 
     }
 
-    public class AsyncSend extends AsyncTask<Void, Void, Boolean> {
-        public Gmail mService = null;
-
-        AsyncSend(GoogleAccountCredential credential) {
-            HttpTransport transport = AndroidHttp.newCompatibleTransport();
-            JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-            mService = new Gmail.Builder(transport, jsonFactory, credential)
-                    .setApplicationName("GmailAPI")
-                    .build();
-//            System.out.println("EMAIL ADDR: "+ mService.Users.GetProfile("me").Execute());
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            mProgress = new ProgressDialog(MainActivity.this);
-            mProgress.setMessage("Sending mail...");
-            mProgress.show();
-        }
-
-        @Override
-        protected Boolean doInBackground(Void... voids) {
-            try {
-                Message message = GmailSetup.sendMessage(mService, "me", GmailSetup.createEmail(to, from, subject, content));
-                return (message != null);
-            } catch (UserRecoverableAuthIOException e) {
-                startActivityForResult(e.getIntent(), REQUEST_AUTHORIZATION);
-            } catch (Exception e) {
-                e.printStackTrace();
-                return false;
-            }
-            return true;
-        }
-
-        @Override
-        protected void onPostExecute(Boolean aBoolean) {
-            super.onPostExecute(aBoolean);
-            mProgress.dismiss();
-            if (aBoolean) {
-                Toast.makeText(MainActivity.this, "Send OK!", Toast.LENGTH_SHORT).show();
-            }
-//            else {
-//                if (from.length() != 0 && to.length() != 0 && subject.length() != 0 && content.length() != 0) {
-//                    Toast.makeText(MainActivity.this, "Send fail!", Toast.LENGTH_SHORT).show();
-//                }
-//            }
-            from = " ";
-            to = " ";
-            subject = " ";
-            content = " ";
 
 
-        }
-    }
 
 
 }
